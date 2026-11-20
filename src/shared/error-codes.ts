@@ -23,6 +23,10 @@ const ERROR_CODES = [
   "RATE_LIMITED",
   "UPSTREAM_UNAVAILABLE",
   "SUBREQUEST_LIMIT",
+  "APIFY_AUTH_FAILED",
+  "TRAFFIC_NOT_CONFIGURED",
+  "TRAFFIC_NO_DOMAINS",
+  "TRAFFIC_RUN_ACTIVE",
   "CONFLICT",
   "INTERNAL_ERROR",
 ] as const;
@@ -55,6 +59,11 @@ const NON_REPORTABLE_ERROR_CODES = new Set<ErrorCode>([
   // log what they capture, so every throw site warns on its own line to keep
   // the failure rate visible in Workers Observability.
   "UPSTREAM_UNAVAILABLE",
+  // Competitor traffic: setup and state the person fixes themselves.
+  "APIFY_AUTH_FAILED",
+  "TRAFFIC_NOT_CONFIGURED",
+  "TRAFFIC_NO_DOMAINS",
+  "TRAFFIC_RUN_ACTIVE",
 ]);
 
 export function isErrorCode(value: string): value is ErrorCode {

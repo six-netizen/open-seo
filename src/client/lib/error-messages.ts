@@ -55,6 +55,14 @@ const STANDARD_MESSAGES: Record<ErrorCode, string> = {
     "The data provider is temporarily unavailable. Please retry in a moment.",
   SUBREQUEST_LIMIT:
     "Cloudflare stopped this at its limit on requests per run. On Workers Paid, redeploy OpenSEO to raise it.",
+  APIFY_AUTH_FAILED:
+    "Apify rejected the token or the account has no credit. Check APIFY_API_TOKEN and your Apify balance.",
+  TRAFFIC_NOT_CONFIGURED:
+    "Traffic data isn't set up. Set APIFY_API_TOKEN on the server and restart OpenSEO.",
+  TRAFFIC_NO_DOMAINS:
+    "There are no domains to check. Set the project's domain or add competitors first.",
+  TRAFFIC_RUN_ACTIVE:
+    "A traffic check is already running for this project. Results appear when it finishes.",
   CONFLICT: "This request conflicts with existing data.",
   INTERNAL_ERROR: UNEXPECTED_ERROR_MESSAGE,
 };
