@@ -99,7 +99,7 @@ export type TrafficOverview = {
 };
 
 /** "2026-10-01" → "2026-09-01". */
-export function previousTrafficMonth(month: string): string {
+function previousTrafficMonth(month: string): string {
   const year = Number(month.slice(0, 4));
   const monthNumber = Number(month.slice(5, 7));
   return monthNumber === 1

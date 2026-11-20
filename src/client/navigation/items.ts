@@ -2,6 +2,7 @@ import {
   Bookmark,
   Bot,
   Brain,
+  ChartColumn,
   ChartLine,
   ClipboardCheck,
   FileText,
@@ -54,6 +55,11 @@ const projectNavItems = [
     to: "/p/$projectId/domain" as const,
     label: "Domain Overview",
     icon: Globe,
+  },
+  {
+    to: "/p/$projectId/traffic" as const,
+    label: "Traffic",
+    icon: ChartColumn,
   },
   {
     to: "/p/$projectId/backlinks" as const,
@@ -135,6 +141,7 @@ export function getProjectNavGroups(projectId: string) {
       items: [
         byPath("/p/$projectId/keywords"),
         byPath("/p/$projectId/domain"),
+        byPath("/p/$projectId/traffic"),
         byPath("/p/$projectId/backlinks"),
       ],
     },
