@@ -70,6 +70,8 @@ services:
       GOOGLE_CLIENT_SECRET: ${GOOGLE_CLIENT_SECRET:-}
       GOOGLE_MAPS_API_KEY: ${GOOGLE_MAPS_API_KEY:-}
       CRAWLER_ACCESS_SECRET: ${CRAWLER_ACCESS_SECRET:-}
+      APIFY_API_TOKEN: ${APIFY_API_TOKEN:-}
+      APIFY_SIMILARWEB_ACTOR: ${APIFY_SIMILARWEB_ACTOR:-}
     volumes: [config:/config, web-config:/web-config]
     depends_on:
       runtime: { condition: service_started }

@@ -58,6 +58,8 @@ const allowed = [
   "GOOGLE_CLIENT_SECRET",
   "GOOGLE_MAPS_API_KEY",
   "CRAWLER_ACCESS_SECRET",
+  "APIFY_API_TOKEN",
+  "APIFY_SIMILARWEB_ACTOR",
 ];
 config.vars = {
   ...secrets,
