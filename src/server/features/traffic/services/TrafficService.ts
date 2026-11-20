@@ -7,11 +7,13 @@ import {
   mapSimilarwebItem,
   startSimilarwebRun,
 } from "@/server/lib/apify/similarweb";
-import { AppError, describeError } from "@/server/lib/errors";
+import { AppError, asAppError, describeError } from "@/server/lib/errors";
 import {
   TRAFFIC_DEFAULT_MONTHS,
   TRAFFIC_MAX_MONTHS,
   TRAFFIC_RUN_TIMEOUT_MS,
+  TRAFFIC_SCHEDULE_DAY,
+  isScheduledTrafficRunDue,
   normalizeTrafficDomain,
   rollUpBrand,
   trafficMonthsAgo,
@@ -178,6 +180,66 @@ async function collectRunningRuns(now: Date = new Date()): Promise<void> {
   }
 }
 
+// Not failures of the provider: nothing to record, nothing to retry.
+const SKIPPED_START_CODES = new Set([
+  "TRAFFIC_NOT_CONFIGURED",
+  "TRAFFIC_NO_DOMAINS",
+  "TRAFFIC_RUN_ACTIVE",
+  "NOT_FOUND",
+]);
+
+/**
+ * Called on every scheduled tick: starts the monthly run of each project that
+ * is due. A start the provider rejects is stored as a failed run, so the
+ * project retries a day later and gives up after three failures that month.
+ */
+async function startScheduledRuns(now: Date = new Date()): Promise<void> {
+  if (now.getUTCDate() < TRAFFIC_SCHEDULE_DAY) return;
+  const monthStart = `${now.toISOString().slice(0, 7)}-01T00:00:00.000Z`;
+  for (const projectId of await TrafficRepository.listActiveProjectIds()) {
+    try {
+      const [activeRun, scheduled] = await Promise.all([
+        TrafficRepository.getActiveRun(projectId),
+        TrafficRepository.getScheduledRunsSince(projectId, monthStart),
+      ]);
+      const lastStartedAt = scheduled
+        .map((run) => run.startedAt)
+        .reduce<
+          string | null
+        >((latest, startedAt) => (latest == null || startedAt > latest ? startedAt : latest), null);
+      const due = isScheduledTrafficRunDue({
+        now,
+        hasRunningRun: activeRun != null,
+        completedScheduledThisMonth: scheduled.some(
+          (run) => run.status === "completed",
+        ),
+        failedScheduledThisMonth: scheduled.filter(
+          (run) => run.status === "failed",
+        ).length,
+        lastScheduledStartedAt: lastStartedAt ? new Date(lastStartedAt) : null,
+      });
+      if (!due) continue;
+      await startRun(projectId, "scheduled", now);
+    } catch (error) {
+      const code = asAppError(error)?.code;
+      if (code && SKIPPED_START_CODES.has(code)) continue;
+      console.error(
+        `[traffic] scheduled start failed for project ${projectId}:`,
+        describeError(error),
+      );
+      await TrafficRepository.insertFailedScheduledRun({
+        id: crypto.randomUUID(),
+        projectId,
+        error:
+          code === "APIFY_AUTH_FAILED"
+            ? "Apify rejected the token or the account has no credit."
+            : "The monthly traffic check could not be started.",
+        startedAt: now.toISOString(),
+      });
+    }
+  }
+}
+
 async function getOverview(
   projectId: string,
   months: number = TRAFFIC_DEFAULT_MONTHS,
@@ -267,5 +329,6 @@ async function getOverview(
 export const TrafficService = {
   startRun,
   collectRunningRuns,
+  startScheduledRuns,
   getOverview,
 };

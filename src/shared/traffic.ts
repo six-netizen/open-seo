@@ -190,3 +190,32 @@ export function rollUpBrand(
       : [],
   };
 }
+
+/** Scheduled runs wait for this day (UTC), after the provider usually publishes the previous month. */
+export const TRAFFIC_SCHEDULE_DAY = 12;
+const TRAFFIC_MAX_FAILED_SCHEDULED_RUNS = 3;
+const TRAFFIC_RETRY_AFTER_MS = 24 * 60 * 60_000;
+
+/**
+ * Whether a project's monthly traffic run should start now: once per calendar
+ * month, from the 12th, and after a failure again a day later, three times at
+ * most.
+ */
+export function isScheduledTrafficRunDue(input: {
+  now: Date;
+  hasRunningRun: boolean;
+  completedScheduledThisMonth: boolean;
+  failedScheduledThisMonth: number;
+  lastScheduledStartedAt: Date | null;
+}): boolean {
+  if (input.now.getUTCDate() < TRAFFIC_SCHEDULE_DAY) return false;
+  if (input.hasRunningRun || input.completedScheduledThisMonth) return false;
+  if (input.failedScheduledThisMonth >= TRAFFIC_MAX_FAILED_SCHEDULED_RUNS) {
+    return false;
+  }
+  return (
+    input.lastScheduledStartedAt == null ||
+    input.now.getTime() - input.lastScheduledStartedAt.getTime() >=
+      TRAFFIC_RETRY_AFTER_MS
+  );
+}

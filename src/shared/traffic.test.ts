@@ -1,5 +1,9 @@
 import { describe, expect, it } from "vitest";
-import { rollUpBrand, type TrafficDomainSeries } from "./traffic";
+import {
+  isScheduledTrafficRunDue,
+  rollUpBrand,
+  type TrafficDomainSeries,
+} from "./traffic";
 
 function series(
   domain: string,
@@ -58,5 +62,69 @@ describe("rollUpBrand", () => {
     ]);
 
     expect(brand.momChangePercent).toBeNull();
+  });
+});
+
+const on = (iso: string) => new Date(iso);
+
+describe("isScheduledTrafficRunDue", () => {
+  const idle = {
+    hasRunningRun: false,
+    completedScheduledThisMonth: false,
+    failedScheduledThisMonth: 0,
+    lastScheduledStartedAt: null,
+  };
+  it("waits for the 12th of the month", () => {
+    expect(
+      isScheduledTrafficRunDue({ ...idle, now: on("2026-11-11T23:59:00Z") }),
+    ).toBe(false);
+    expect(
+      isScheduledTrafficRunDue({ ...idle, now: on("2026-11-12T00:00:00Z") }),
+    ).toBe(true);
+  });
+
+  it("runs once a month", () => {
+    expect(
+      isScheduledTrafficRunDue({
+        ...idle,
+        now: on("2026-11-20T10:00:00Z"),
+        completedScheduledThisMonth: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("does not start while a run is active", () => {
+    expect(
+      isScheduledTrafficRunDue({
+        ...idle,
+        now: on("2026-11-20T10:00:00Z"),
+        hasRunningRun: true,
+      }),
+    ).toBe(false);
+  });
+
+  it("retries a failure a day later, at most three times a month", () => {
+    const now = on("2026-11-20T10:00:00Z");
+    const failedOnce = { ...idle, now, failedScheduledThisMonth: 1 };
+
+    expect(
+      isScheduledTrafficRunDue({
+        ...failedOnce,
+        lastScheduledStartedAt: on("2026-11-20T08:00:00Z"),
+      }),
+    ).toBe(false);
+    expect(
+      isScheduledTrafficRunDue({
+        ...failedOnce,
+        lastScheduledStartedAt: on("2026-11-19T09:00:00Z"),
+      }),
+    ).toBe(true);
+    expect(
+      isScheduledTrafficRunDue({
+        ...failedOnce,
+        failedScheduledThisMonth: 3,
+        lastScheduledStartedAt: on("2026-11-15T09:00:00Z"),
+      }),
+    ).toBe(false);
   });
 });

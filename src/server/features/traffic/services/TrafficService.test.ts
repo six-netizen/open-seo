@@ -220,6 +220,42 @@ describe("TrafficService", () => {
     );
   });
 
+  it("starts one scheduled run a month, from the 12th", async () => {
+    await TrafficService.startScheduledRuns(new Date("2026-11-11T08:00:00Z"));
+    expect(await count("SELECT count(*) FROM traffic_runs")).toBe(0);
+
+    await TrafficService.startScheduledRuns(START);
+    await TrafficService.collectRunningRuns(minutesLater(5));
+    await TrafficService.startScheduledRuns(minutesLater(10));
+
+    expect(
+      await count(
+        "SELECT count(*) FROM traffic_runs WHERE trigger = 'scheduled' AND status = 'completed'",
+      ),
+    ).toBe(1);
+    expect(await count("SELECT count(*) FROM traffic_runs")).toBe(1);
+  });
+
+  it("stops retrying a scheduled start the provider keeps rejecting", async () => {
+    apify.startSimilarwebRun.mockRejectedValue(new Error("APIFY_AUTH_FAILED"));
+    const day = 24 * 60;
+
+    await TrafficService.startScheduledRuns(START);
+    await TrafficService.startScheduledRuns(minutesLater(60));
+    expect(await count("SELECT count(*) FROM traffic_runs")).toBe(1);
+
+    await TrafficService.startScheduledRuns(minutesLater(day + 5));
+    await TrafficService.startScheduledRuns(minutesLater(2 * day + 10));
+    await TrafficService.startScheduledRuns(minutesLater(3 * day + 15));
+
+    expect(
+      await count(
+        "SELECT count(*) FROM traffic_runs WHERE trigger = 'scheduled' AND status = 'failed'",
+      ),
+    ).toBe(3);
+    expect((await TrafficService.getOverview("p1")).lastError).not.toBeNull();
+  });
+
   it("rejects a second start while a run is active", async () => {
     await TrafficService.startRun("p1", "manual", START);
 

@@ -60,6 +60,22 @@ async function insertRun(run: {
   await db.insert(trafficRuns).values({ ...run, status: "running" });
 }
 
+/** A scheduled start the provider rejected, kept so retries are counted. */
+async function insertFailedScheduledRun(run: {
+  id: string;
+  projectId: string;
+  error: string;
+  startedAt: string;
+}) {
+  await db.insert(trafficRuns).values({
+    ...run,
+    trigger: "scheduled",
+    status: "failed",
+    domainCount: 0,
+    finishedAt: run.startedAt,
+  });
+}
+
 async function getActiveRun(projectId: string) {
   const [run] = await db
     .select({ id: trafficRuns.id, startedAt: trafficRuns.startedAt })
@@ -310,6 +326,7 @@ export const TrafficRepository = {
   getCompetitors,
   listActiveProjectIds,
   insertRun,
+  insertFailedScheduledRun,
   getActiveRun,
   listRunningRuns,
   finishRun,
