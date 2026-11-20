@@ -10,11 +10,11 @@ import {
 } from "@/shared/traffic";
 
 // Similarweb's public traffic figures, fetched through an Apify actor that is
-// paid per result. The actor is a third-party scraper, not Similarweb's API:
-// its output can change, so every row is validated before anything is stored.
+// paid per website. The actor is a scraper, not Similarweb's API: its output
+// can change, so every row is validated before anything is stored.
 
 const APIFY_API = "https://api.apify.com/v2";
-const DEFAULT_ACTOR = "trakk~similarweb-scraper";
+const DEFAULT_ACTOR = "tri_angle~fast-similarweb-scraper";
 const REQUEST_TIMEOUT_MS = 30_000;
 const MAX_COUNTRIES = 5;
 
@@ -92,7 +92,7 @@ export async function startSimilarwebRun(
 ): Promise<{ apifyRunId: string }> {
   const response = await apifyRequest(`/acts/${await actorId()}/runs`, {
     method: "POST",
-    body: JSON.stringify({ domains, mode: "base_data" }),
+    body: JSON.stringify({ websites: domains }),
   });
   const run = runEnvelopeSchema.parse(await response.json());
   return { apifyRunId: run.data.id };
@@ -133,26 +133,37 @@ export async function getSimilarwebItems(
   return z.array(z.unknown()).parse(await response.json());
 }
 
-// Only the domain is required. Everything else is optional so one thin row
+// The output of tri_angle/fast-similarweb-scraper. Only the website's name (or
+// its Similarweb URL) is required. Everything else is optional so one thin row
 // (a small site with visits but no engagement data) doesn't fail a whole run.
 const itemSchema = z
   .object({
-    domain: z.string().min(1),
-    status: z.string().nullish(),
-    trafficDataAvailable: z.boolean().nullish(),
-    globalRank: z.number().nullish(),
-    estimatedMonthlyVisits: z.record(z.string(), z.number()).nullish(),
-    bounceRatePercent: z.number().nullish(),
-    pagesPerVisit: z.number().nullish(),
-    timeOnSiteSeconds: z.number().nullish(),
+    name: z.string().nullish(),
+    url: z.string().nullish(),
+    globalRank: z
+      .object({ rank: z.number().nullish() })
+      .passthrough()
+      .nullish(),
+    engagements: z
+      .object({
+        timeOnSite: z.number().nullish(),
+        pagePerVisit: z.number().nullish(),
+        bounceRate: z.number().nullish(),
+      })
+      .passthrough()
+      .nullish(),
     trafficSources: z.record(z.string(), z.number().nullable()).nullish(),
-    topCountryShares: z
+    topCountries: z
       .array(
         z
-          .object({ countryCode: z.string().min(1), share: z.number() })
+          .object({
+            countryCode: z.string().min(1),
+            visitsShare: z.number(),
+          })
           .passthrough(),
       )
       .nullish(),
+    estimatedMonthlyVisits: z.record(z.string(), z.number()).nullish(),
   })
   .passthrough();
 
@@ -161,10 +172,17 @@ function toFraction(value: number): number {
   return value > 1 ? value / 100 : value;
 }
 
+// "https://similarweb.com/website/example.com/" → "example.com".
+function domainFromSimilarwebUrl(url: string): string {
+  return /\/website\/([^/?#]+)/.exec(url)?.[1] ?? "";
+}
+
 export function mapSimilarwebItem(item: unknown): TrafficDomainResult {
   const row = itemSchema.parse(item);
-  const domain = normalizeTrafficDomain(row.domain);
-  if (!domain) throw new Error("Similarweb row has an empty domain");
+  const domain = normalizeTrafficDomain(
+    row.name?.trim() || domainFromSimilarwebUrl(row.url ?? ""),
+  );
+  if (!domain) throw new Error("Similarweb row names no website");
 
   const monthlyVisits = sortBy(
     Object.entries(row.estimatedMonthlyVisits ?? {}).flatMap(
@@ -176,11 +194,9 @@ export function mapSimilarwebItem(item: unknown): TrafficDomainResult {
     (entry) => entry.month,
   );
 
-  const tracked =
-    row.trafficDataAvailable !== false &&
-    row.status !== "not_tracked" &&
-    monthlyVisits.length > 0;
-  if (!tracked) {
+  // Similarweb publishes nothing for small sites: the row then has no monthly
+  // figures, or only zeros. That is "not tracked", never zero visits.
+  if (!monthlyVisits.some((entry) => entry.visits > 0)) {
     return { domain, status: "not_tracked", monthlyVisits: [], latest: null };
   }
 
@@ -191,9 +207,9 @@ export function mapSimilarwebItem(item: unknown): TrafficDomainResult {
     [(entry) => entry.share, "desc"],
   );
   const countries: TrafficShare[] = sortBy(
-    (row.topCountryShares ?? []).map((country) => ({
+    (row.topCountries ?? []).map((country) => ({
       key: country.countryCode.toUpperCase(),
-      share: toFraction(country.share),
+      share: toFraction(country.visitsShare),
     })),
     [(entry) => entry.share, "desc"],
   ).slice(0, MAX_COUNTRIES);
@@ -204,11 +220,13 @@ export function mapSimilarwebItem(item: unknown): TrafficDomainResult {
     monthlyVisits,
     latest: {
       month: monthlyVisits[monthlyVisits.length - 1].month,
-      globalRank: row.globalRank ?? null,
+      globalRank: row.globalRank?.rank ?? null,
       bounceRate:
-        row.bounceRatePercent == null ? null : row.bounceRatePercent / 100,
-      pagesPerVisit: row.pagesPerVisit ?? null,
-      timeOnSiteSeconds: row.timeOnSiteSeconds ?? null,
+        row.engagements?.bounceRate == null
+          ? null
+          : toFraction(row.engagements.bounceRate),
+      pagesPerVisit: row.engagements?.pagePerVisit ?? null,
+      timeOnSiteSeconds: row.engagements?.timeOnSite ?? null,
       channels,
       countries,
     },

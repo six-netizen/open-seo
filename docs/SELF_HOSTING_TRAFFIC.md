@@ -6,10 +6,10 @@ This feature is an addition in this fork. It is not part of upstream OpenSEO.
 
 ## Where the numbers come from
 
-The figures are Similarweb's public estimates, fetched by a third-party [Apify](https://apify.com) actor ([`trakk/similarweb-scraper`](https://apify.com/trakk/similarweb-scraper)). Know what that means before you rely on them:
+The figures are Similarweb's public estimates, fetched by an [Apify](https://apify.com) actor: [`tri_angle/fast-similarweb-scraper`](https://apify.com/tri_angle/fast-similarweb-scraper), which Apify maintains. Know what that means before you rely on them:
 
 - They are modelled estimates, not measurements, and are weakest for small sites.
-- The actor is an unofficial scraper, not Similarweb's API. It can change or stop working. When it does, traffic checks fail with a message on the Traffic page and the history already stored stays readable.
+- The actor is a scraper, not Similarweb's API. It can change, be blocked or be withdrawn. When it does, traffic checks fail with a message on the Traffic page and the history already stored stays readable.
 - Similarweb publishes monthly data. A check returns the last three months, so longer history exists only from the first check you ran onward.
 - A site Similarweb doesn't track is shown as "Not tracked", never as zero visits.
 - Referring sites and affiliate lists are not collected. Only the share of visits arriving by referral is.
@@ -29,7 +29,7 @@ The figures are Similarweb's public estimates, fetched by a third-party [Apify](
    docker compose up -d --force-recreate init web crawl-gateway
    ```
 
-`APIFY_SIMILARWEB_ACTOR` is optional and defaults to `trakk~similarweb-scraper`. The data mapping is written for that actor's output; another actor needs its own mapping in `src/server/lib/apify/similarweb.ts`.
+`APIFY_SIMILARWEB_ACTOR` is optional and defaults to `tri_angle~fast-similarweb-scraper`. The data mapping is written for that actor's output; another actor needs its own mapping in `src/server/lib/apify/similarweb.ts`.
 
 DataForSEO is not needed for the Traffic page.
 
@@ -48,7 +48,7 @@ Running more than one check a month returns the same monthly figures.
 
 ## Cost
 
-Apify bills the actor per domain checked. At the actor's listed price of about $1.50 per 1,000 domains, 50 domains checked monthly costs well under $1 a month. Domains Similarweb doesn't track are not billed as results. Check the actor's Pricing tab for current rates.
+Apify bills the actor per website checked. Its listing quotes between $1 and $2 per 1,000 websites, so 50 domains checked monthly costs well under $1 a month. Check the actor's Pricing tab for current rates.
 
 ## Building the image for a fork
 

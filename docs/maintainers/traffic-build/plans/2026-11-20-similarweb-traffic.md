@@ -8,7 +8,7 @@
 
 **Tech Stack:** TypeScript, TanStack Start/Router/Query, Drizzle (SQLite + Postgres schemas), Zod, Vitest, recharts, the MCP server in `src/server/mcp`, Docker standalone stack (`deploy/standalone`).
 
-**Spec:** `docs/superpowers/specs/2026-11-20-similarweb-traffic-design.md`
+**Spec:** `docs/maintainers/traffic-build/specs/2026-11-20-similarweb-traffic-design.md`
 
 ## Global Constraints
 

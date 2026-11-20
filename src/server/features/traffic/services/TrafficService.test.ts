@@ -42,15 +42,14 @@ const minutesLater = (minutes: number) =>
 
 function item(domain: string, october: number) {
   return {
-    domain,
-    status: "ok",
-    globalRank: 5000,
+    name: domain,
+    globalRank: { rank: 5000 },
     estimatedMonthlyVisits: {
       "2026-09-01": 900,
       "2026-10-01": october,
     },
-    trafficSources: { direct: 0.6, organicSearch: 0.4 },
-    topCountryShares: [{ countryCode: "DE", share: 1 }],
+    trafficSources: { direct: 0.6, search: 0.4 },
+    topCountries: [{ countryCode: "DE", visitsShare: 1 }],
   };
 }
 
@@ -267,11 +266,7 @@ describe("TrafficService", () => {
   it("shows an untracked domain as not tracked, never as zero visits", async () => {
     apify.getSimilarwebItems.mockResolvedValue([
       item("own.test", 1000),
-      {
-        domain: "rival.test",
-        status: "not_tracked",
-        trafficDataAvailable: false,
-      },
+      { name: "rival.test", estimatedMonthlyVisits: {} },
     ]);
     await TrafficService.startRun("p1", "manual", START);
     await TrafficService.collectRunningRuns(minutesLater(5));

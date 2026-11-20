@@ -1,0 +1,56 @@
+[
+  {
+    "url": "https://similarweb.com/website/casoca.com.br",
+    "name": "casoca.com.br",
+    "globalRank": { "rank": 63367 },
+    "countryRank": { "countryCode": "BR", "rank": 3388 },
+    "engagements": {
+      "visits": 545706,
+      "timeOnSite": 663.9156205560867,
+      "pagePerVisit": 11.556724622786087,
+      "bounceRate": 0.2761196948199542
+    },
+    "trafficSources": {
+      "direct": 0.4760969222945158,
+      "referrals": 0.011604366847923151,
+      "social": 0.015898375412785756,
+      "mail": 0.0002876896389322904,
+      "paidReferrals": 0.0004882443737246689,
+      "search": 0.49562440142942465
+    },
+    "topCountries": [
+      {
+        "countryCode": "BR",
+        "countryName": "Brazil",
+        "visitsShare": 0.9473001622517155
+      },
+      {
+        "countryCode": "BO",
+        "countryName": "Bolivia",
+        "visitsShare": 0.012897845457196385
+      },
+      {
+        "countryCode": "PE",
+        "countryName": "Peru",
+        "visitsShare": 0.00871360643238808
+      },
+      {
+        "countryCode": "AO",
+        "countryName": "Angola",
+        "visitsShare": 0.008396438481073703
+      },
+      {
+        "countryCode": "PT",
+        "countryName": "Portugal",
+        "visitsShare": 0.00329055758063208
+      }
+    ],
+    "estimatedMonthlyVisits": {
+      "2024-08-01": 473822,
+      "2024-09-01": 466648,
+      "2024-10-01": 545706
+    },
+    "scrapedAt": "2024-12-04T10:03:43.475Z",
+    "snapshotDate": "2024-10-01T00:00:00+00:00"
+  }
+]
