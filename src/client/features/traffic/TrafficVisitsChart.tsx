@@ -14,11 +14,8 @@ import {
   type ChartConfig,
 } from "@/client/components/ui/chart";
 import type { TrafficBrand } from "@/shared/traffic";
-import {
-  TRAFFIC_COLORS,
-  formatTrafficMonth,
-  formatVisits,
-} from "./trafficFormat";
+import { TRAFFIC_COLORS, formatVisits } from "./trafficFormat";
+import { formatTrafficMonth } from "@/shared/traffic";
 
 const formatAxis = (value: unknown) =>
   typeof value === "number" ? formatVisits(value) : "";

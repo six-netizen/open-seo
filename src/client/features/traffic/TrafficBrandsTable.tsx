@@ -17,9 +17,9 @@ import {
   formatCountry,
   formatRank,
   formatShare,
-  formatTrafficMonth,
   formatVisits,
 } from "./trafficFormat";
+import { formatTrafficMonth } from "@/shared/traffic";
 
 const STATUS_LABEL = {
   not_tracked: "Not tracked",

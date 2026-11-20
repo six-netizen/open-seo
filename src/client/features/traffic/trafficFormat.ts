@@ -3,11 +3,6 @@ const compact = new Intl.NumberFormat("en-US", {
   maximumFractionDigits: 1,
 });
 const whole = new Intl.NumberFormat("en-US");
-const monthLabel = new Intl.DateTimeFormat("en-US", {
-  month: "short",
-  year: "numeric",
-  timeZone: "UTC",
-});
 const countryNames = new Intl.DisplayNames(["en"], { type: "region" });
 
 /** 1234567 → "1.2M". */
@@ -24,12 +19,6 @@ export function formatShare(share: number): string {
   const percent = share * 100;
   if (percent > 0 && percent < 1) return "<1%";
   return `${Math.round(percent)}%`;
-}
-
-/** "2026-10-01" → "Oct 2026". */
-export function formatTrafficMonth(month: string): string {
-  const date = new Date(`${month}T00:00:00Z`);
-  return Number.isNaN(date.getTime()) ? month : monthLabel.format(date);
 }
 
 /** "organicSearch", "organic_search" or "Organic Search" → "Organic search". */

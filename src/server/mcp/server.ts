@@ -38,6 +38,10 @@ import { getBacklinksOverviewTool } from "@/server/mcp/tools/get-backlinks-overv
 import { getBacklinksProfileTool } from "@/server/mcp/tools/get-backlinks-profile";
 import { getDomainKeywordSuggestionsTool } from "@/server/mcp/tools/get-domain-keyword-suggestions";
 import { getDomainOverviewTool } from "@/server/mcp/tools/get-domain-overview";
+import {
+  getCompetitorTrafficTool,
+  runTrafficCheckTool,
+} from "@/server/mcp/tools/traffic-tools";
 import { addRankTrackingKeywordsTool } from "@/server/mcp/tools/add-rank-tracking-keywords";
 import { createRankTrackerTool } from "@/server/mcp/tools/create-rank-tracker";
 import { estimateRankTrackerCostTool } from "@/server/mcp/tools/estimate-rank-tracker-cost";
@@ -273,6 +277,8 @@ export function registerOpenSeoTools(
   register(saveKeywordsTool);
   register(getDomainOverviewTool);
   register(getDomainKeywordSuggestionsTool);
+  register(getCompetitorTrafficTool);
+  register(runTrafficCheckTool);
   register(getBacklinksOverviewTool);
   register(getBacklinksProfileTool);
   register(getSerpResultsTool);

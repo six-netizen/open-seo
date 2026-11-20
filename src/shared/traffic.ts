@@ -49,6 +49,20 @@ export function normalizeTrafficDomain(input: string): string {
     .replace(/\.$/, "");
 }
 
+const TRAFFIC_MONTH_LABEL = new Intl.DateTimeFormat("en-US", {
+  month: "short",
+  year: "numeric",
+  timeZone: "UTC",
+});
+
+/** "2026-10-01" → "Oct 2026". */
+export function formatTrafficMonth(month: string): string {
+  const date = new Date(`${month}T00:00:00Z`);
+  return Number.isNaN(date.getTime())
+    ? month
+    : TRAFFIC_MONTH_LABEL.format(date);
+}
+
 /** "2026-10-17", "2026-10" or an ISO timestamp → "2026-10-01". Null if not a date. */
 export function toTrafficMonth(value: string): string | null {
   const match = /^(\d{4})-(\d{2})/.exec(value);
